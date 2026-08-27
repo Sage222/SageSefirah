@@ -6,255 +6,103 @@
     xmlns:wctconverters="using:CommunityToolkit.WinUI.Converters"
     xmlns:wuc="using:CommunityToolkit.WinUI.Controls"
     xmlns:helpers="using:Sefirah.Helpers"
-    xmlns:local="using:Sefirah.Views"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:models="using:Sefirah.Data.Models"
-    xmlns:not_win="http://uno.ui/not_win"
-    xmlns:userControls="using:Sefirah.UserControls"
     xmlns:utu="using:Uno.Toolkit.UI"
-    xmlns:win="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    Background="{ThemeResource App.PageBackgroundBrush}"
-    mc:Ignorable="not_win"
-    x:Name="PageRoot">
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
 
-    <Page.Resources>
-        <wctconverters:BoolToObjectConverter x:Key="BoolToConnectionButtonTextConverter"
-            FalseValue="{helpers:ResourceString Name=Disconnected/Text}"
-            TrueValue="{helpers:ResourceString Name=Connected/Text}" />
-        
-        <wctconverters:BoolToObjectConverter x:Key="BoolToDndButtonStyleConverter"
-            FalseValue="{StaticResource DefaultButtonStyle}"
-            TrueValue="{StaticResource AccentButtonStyle}" />
-
-        <converters:CountToBooleanConverter x:Key="CountToBooleanConverter" />
-        <converters:CountToBooleanConverter x:Key="InverseCountToBooleanConverter" Inverse="True" />
-        <converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter" />
-
-        <wctconverters:EmptyObjectToObjectConverter x:Key="EmptyObjectToOpacityConverter" EmptyValue="1.0" NotEmptyValue="0.0" />
-        <converters:RingerModeToIconConverter x:Key="RingerModeToIconConverter" />
-        <converters:BatteryStatusToIconConverter x:Key="BatteryStatusToIconConverter" />
-        <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-        <converters:BooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" Inverse="True" />
-        <converters:EmptyObjectToVisibilityConverter x:Key="EmptyObjectToVisibilityConverter" />
-        <converters:EmptyObjectToVisibilityConverter x:Key="InverseEmptyObjectToVisibilityConverter" Inverse="True" />
-
-    </Page.Resources>
-
-    <Grid
-        AllowDrop="True"
-        DragOver="Grid_DragOver"
-        Drop="Page_Drop">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <win:Grid Grid.Row="0">
-            <userControls:TitleBar />
-        </win:Grid>
-        <not_win:Grid Grid.Row="0" Height="8" />
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="360" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
 
-            <!--  Left Panel: Device Info and Notifications  -->
-            <Grid Grid.Column="0" Margin="18,12" Padding="0" RowSpacing="8">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
+        <NavigationView
+            x:Name="MainNavigationView"
+            Grid.Row="0"
+            IsBackButtonVisible="Collapsed"
+            IsSettingsVisible="True"
+            Loaded="MainNavigationView_Loaded"
+            PaneDisplayMode="Top"
+            SelectionChanged="NavigationView_SelectionChanged">
+            <NavigationView.Resources>
+                <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent" />
 
-                <userControls:DeviceControlCenter
-                    x:Name="ConnectedDevicePane"
-                    Grid.Row="0"
-                    PaneFlyoutPlacement="Bottom"
-                    Visibility="{x:Bind ViewModel.Device, Converter={StaticResource EmptyObjectToVisibilityConverter}, Mode=OneWay}" />
+                <Style TargetType="NavigationViewItem" x:Key="CompactFooterNavigationViewItemStyle">
+                    <Setter Property="Height" Value="40" />
+                </Style>
+            </NavigationView.Resources>
 
-                <StackPanel
-                    Grid.Row="1"
-                    Background="Transparent"
+            <NavigationView.MenuItems>
+                <NavigationViewItem
+                    x:Name="CallsNavigationItem"
+                    Content="{helpers:ResourceString Name=Calls}"
+                    Tag="Calls"
                     Visibility="{x:Bind ViewModel.Device, Converter={StaticResource EmptyObjectToVisibilityConverter}, Mode=OneWay}">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE717;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem
+                    x:Name="MessagesNavigationItem"
+                    Content="{helpers:ResourceString Name=Messages}"
+                    Tag="Messages"
+                    Visibility="{x:Bind ViewModel.Device, Converter={StaticResource EmptyObjectToVisibilityConverter}, Mode=OneWay}">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8BD;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
 
-                    <Rectangle Height="1" Fill="{ThemeResource ControlStrokeColorDefaultBrush}" />
+                <NavigationViewItem
+                    x:Name="AppsNavigationItem"
+                    Content="{helpers:ResourceString Name=Apps}"
+                    Tag="Apps"
+                    Visibility="{x:Bind ViewModel.Device, Converter={StaticResource EmptyObjectToVisibilityConverter}, Mode=OneWay}">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xED35;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
 
-                    <!-- Media sessions -->
-                    <StackPanel
-                        x:Name="MediaSession"
-                        Visibility="{x:Bind ViewModel.Device.DeviceSettings.MediaSessionReceive, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <Border
-                            Margin="0,8,0,0"
-                            Padding="12"
-                            Background="{ThemeResource CardBackgroundFillColorDefault}"
-                            BorderBrush="{ThemeResource CardStrokeColorDefault}"
-                            BorderThickness="1"
-                            CornerRadius="8"
-                            Visibility="{x:Bind ViewModel.Device.RemotePlaybackSessions.Count, Mode=OneWay, Converter={StaticResource CountToVisibilityConverter}}">
-                            <userControls:MediaSessionsControl />
-                        </Border>
-                    </StackPanel>
-                </StackPanel>
+                <NavigationViewItem
+                    x:Name="AdbNavigationItem"
+                    Content="ADB"
+                    Tag="Adb"
+                    Tapped="AdbNavigationItem_Tapped"
+                    Visibility="{x:Bind ViewModel.Device, Converter={StaticResource EmptyObjectToVisibilityConverter}, Mode=OneWay}">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE756;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
 
-                <userControls:NotificationsControl
-                    Grid.Row="2"
-                    Visibility="{x:Bind ViewModel.Device, Converter={StaticResource EmptyObjectToVisibilityConverter}, Mode=OneWay}" />
-
-                <!--  No Device Connected View  -->
-                <Grid
-                    Grid.Row="0"
-                    Margin="0,20,0,0"
-                    Visibility="{x:Bind ViewModel.Device, Converter={StaticResource InverseEmptyObjectToVisibilityConverter}, Mode=OneWay}">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-
-                    <!--  Device List Section  -->
-                    <Grid Grid.Row="2">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
-                        <TextBlock
-                            Grid.Row="0"
-                            Margin="0,0,0,12"
-                            FontSize="18"
-                            FontWeight="SemiBold"
-                            Text="{helpers:ResourceString Name=AvailableDevices/Title}" />
-
-                        <!--  Available Devices  -->
-                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                            <ItemsRepeater ItemsSource="{x:Bind DevicesViewModel.DiscoveredDevices, Mode=OneWay}">
-                                <ItemsRepeater.Layout>
-                                    <StackLayout Orientation="Vertical" Spacing="8" />
-                                </ItemsRepeater.Layout>
-                                <ItemsRepeater.ItemTemplate>
-                                    <DataTemplate x:DataType="models:DiscoveredDevice">
-                                        <Button
-                                            Margin="0,0,0,4"
-                                            Padding="12"
-                                            HorizontalAlignment="Stretch"
-                                            HorizontalContentAlignment="Left"
-                                            Click="DiscoveredDeviceButton_Click"
-                                            Tag="{x:Bind}">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-                                                <FontIcon
-                                                    Grid.Column="0"
-                                                    Margin="0,0,12,0"
-                                                    VerticalAlignment="Center"
-                                                    Glyph="&#xE8EA;" />
-                                                <StackPanel Grid.Column="1" Spacing="4">
-                                                    <TextBlock FontWeight="SemiBold" Text="{x:Bind Name}" />
-                                                    <TextBlock
-                                                        FontSize="12"
-                                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                                        Text="{x:Bind VerificationKey}" />
-                                                </StackPanel>
-                                            </Grid>
-                                        </Button>
-                                    </DataTemplate>
-                                </ItemsRepeater.ItemTemplate>
-                            </ItemsRepeater>
-                        </ScrollViewer>
+            <NavigationView.FooterMenuItems>
+                <NavigationViewItem
+                    Style="{StaticResource CompactFooterNavigationViewItemStyle}"
+                    SelectsOnInvoked="False"
+                    utu:CommandExtensions.Command="{x:Bind ViewModel.UpdateCommand}"
+                    AutomationProperties.Name="{helpers:ResourceString Name=UpdateNotification/Action}"
+                    ToolTipService.ToolTip="{helpers:ResourceString Name=UpdateNotification/Action}"
+                    Visibility="{x:Bind ViewModel.IsUpdateAvailableOrUpdating, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Grid>
+                        <FontIcon
+                            FontSize="16"
+                            Foreground="{ThemeResource AccentFillColorDefaultBrush}"
+                            Glyph="&#xEDAB;"
+                            Visibility="{x:Bind ViewModel.IsUpdating, Mode=OneWay, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
+                        <ProgressRing
+                            x:Name="loadingicon"
+                            Width="16"
+                            Height="16"
+                            IsIndeterminate="True"
+                            x:Load="{x:Bind ViewModel.IsUpdating, Mode=OneWay}" />
                     </Grid>
-                </Grid>
+                </NavigationViewItem>
+            </NavigationView.FooterMenuItems>
+        </NavigationView>
 
-            </Grid>
-            <Grid Grid.Column="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <NavigationView
-                    x:Name="MainNavigationView"
-                    Grid.Row="0"
-                    BorderBrush="Transparent"
-                    IsBackButtonVisible="Collapsed"
-                    IsSettingsVisible="True"
-                    Loaded="MainNavigationView_Loaded"
-                    PaneDisplayMode="Top"
-                    SelectionChanged="NavigationView_SelectionChanged">
-                    <NavigationView.Resources>
-                        <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent" />
-
-                        <Style TargetType="NavigationViewItem" x:Key="CompactFooterNavigationViewItemStyle">
-                            <Setter Property="Height" Value="40" />
-                        </Style>
-                    </NavigationView.Resources>
-
-                    <NavigationView.MenuItems>
-                        <NavigationViewItem
-                            x:Name="CallsNavigationItem"
-                            Content="{helpers:ResourceString Name=Calls}"
-                            Tag="Calls"
-                            Visibility="{x:Bind ViewModel.Device, Converter={StaticResource EmptyObjectToVisibilityConverter}, Mode=OneWay}">
-                            <NavigationViewItem.Icon>
-                                <FontIcon Glyph="&#xE717;" />
-                            </NavigationViewItem.Icon>
-                        </NavigationViewItem>
-                        <NavigationViewItem
-                            x:Name="MessagesNavigationItem"
-                            Content="{helpers:ResourceString Name=Messages}"
-                            Tag="Messages"
-                            Visibility="{x:Bind ViewModel.Device, Converter={StaticResource EmptyObjectToVisibilityConverter}, Mode=OneWay}">
-                            <NavigationViewItem.Icon>
-                                <FontIcon Glyph="&#xE8BD;" />
-                            </NavigationViewItem.Icon>
-                        </NavigationViewItem>
-
-                        <NavigationViewItem
-                            x:Name="AppsNavigationItem"
-                            Content="{helpers:ResourceString Name=Apps}"
-                            Tag="Apps"
-                            Visibility="{x:Bind ViewModel.Device, Converter={StaticResource EmptyObjectToVisibilityConverter}, Mode=OneWay}">
-                            <NavigationViewItem.Icon>
-                                <FontIcon Glyph="&#xED35;" />
-                            </NavigationViewItem.Icon>
-                        </NavigationViewItem>
-                    </NavigationView.MenuItems>
-
-                    <NavigationView.FooterMenuItems>
-                        <NavigationViewItem
-                            Style="{StaticResource CompactFooterNavigationViewItemStyle}"
-                            SelectsOnInvoked="False"
-                            utu:CommandExtensions.Command="{x:Bind ViewModel.UpdateCommand}"
-                            AutomationProperties.Name="{helpers:ResourceString Name=UpdateNotification/Action}"
-                            ToolTipService.ToolTip="{helpers:ResourceString Name=UpdateNotification/Action}"
-                            Visibility="{x:Bind ViewModel.IsUpdateAvailableOrUpdating, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <Grid>
-                                <FontIcon
-                                    FontSize="16"
-                                    Foreground="{ThemeResource AccentFillColorDefaultBrush}"
-                                    Glyph="&#xEDAB;"
-                                    Visibility="{x:Bind ViewModel.IsUpdating, Mode=OneWay, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
-                                <ProgressRing
-                                    x:Name="loadingicon"
-                                    Width="16"
-                                    Height="16"
-                                    IsIndeterminate="True"
-                                    x:Load="{x:Bind ViewModel.IsUpdating, Mode=OneWay}" />
-                            </Grid>
-                        </NavigationViewItem>
-                    </NavigationView.FooterMenuItems>
-                </NavigationView>
-
-                <Frame
-                    x:Name="ContentFrame"
-                    Grid.Row="1"
-                    Background="{ThemeResource LayerFillColorDefault}"
-                    BorderBrush="{StaticResource CardStrokeColorDefault}"
-                    BorderThickness="1,1,0,0"
-                    CornerRadius="10,0,0,0" />
-            </Grid>
-        </Grid>
-
+        <Frame
+            x:Name="ContentFrame"
+            Grid.Row="1"
+            Background="{ThemeResource LayerFillColorDefault}" />
     </Grid>
 </Page>
